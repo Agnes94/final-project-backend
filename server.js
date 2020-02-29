@@ -5,11 +5,31 @@ import mongoose from 'mongoose'
 import bcrypt from 'bcrypt-nodejs'
 import crypto from 'crypto'
 
+
 // **** MONGOOSE SETUP ****
 
 const mongoUrl = process.env.MONGO_URL || "mongodb://localhost/plantCare"
 mongoose.connect(mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true })
 mongoose.Promise = Promise
+
+// **** SETUP FOR UPLOADING IMAGES ****
+
+const multer = require("multer");
+const cloudinary = require("cloudinary");
+const cloudinaryStorage = require("multer-storage-cloudinary");
+
+cloudinary.config({
+  cloud_name: process.env.CLOUD_NAME,
+  api_key: process.env.API_KEY,
+  api_secret: process.env.API_SECRET
+});
+const storage = cloudinaryStorage({
+  cloudinary: cloudinary,
+  folder: "plant-project",
+  allowedFormats: ["jpg", "png"],
+  transformation: [{ width: 500, height: 500, crop: "limit" }]
+});
+const parser = multer({ storage: storage });
 
 // **** MONGOOSE MODELS ****
 
@@ -39,7 +59,7 @@ export const User = mongoose.model('User', {
 
 // Mongoose model for plant profile
 
-export const plantProfile = mongoose.model('plantProfile', {
+export const Plant = mongoose.model('Plant', {
   name: {
     type: String,
     required: true,
@@ -64,9 +84,9 @@ export const plantProfile = mongoose.model('plantProfile', {
     required: true,
     maxlength: 150
   },
-  /* image: {
- */
-
+  image: {
+    type: String,
+  },
   waterAt: {
     type: Date,
     default: Date.now
@@ -91,8 +111,27 @@ const authenticateUser = async (req, res, next) => {
 const port = process.env.PORT | 8000
 const app = express()
 
+
 // Add middlewares to enable cors and json body parsing
 app.use(cors())
+
+// Post route for plant profiles
+app.post('/plants', parser.single("image"), (req, res) => {
+
+  const { name, location, acquiredAt, type, notes, waterAt } = req.body
+  // using mongoose model to create the database entry
+  const plant = new Plant({ name, location, acquiredAt, type, notes, waterAt })
+  plant.image = req.file.url
+  try {
+    //Success
+    const savedPlant = plant.save()
+    res.status(201).json(savedPlant)
+  } catch (err) {
+    // Failed
+    res.status(400).json({ message: 'Could not create plant profile', error: err.errors })
+  }
+})
+
 app.use(bodyParser.json())
 
 // **** ROUTES ****
@@ -154,20 +193,7 @@ app.get('/plants/:id', async (req, res) => {
   }
 })
 
-// Post route for plant profiles
-app.post('/plants', async (req, res) => {
-  const { name, location, acquiredAt, type, notes, waterAt } = req.body
-  // using mongoose model to create the database entry
-  const plant = new Plant({ name, location, acquiredAt, type, notes, waterAt })
-  try {
-    //Success
-    const savedPlant = await plant.save()
-    res.status(201).json(savedPlant)
-  } catch (err) {
-    // Failed
-    res.status(400).json({ message: 'Could not create plant profile', error: err.errors })
-  }
-})
+
 
 // Put route for specific plant id
 app.put('/plants/:id', async (req, res) => {
@@ -186,7 +212,7 @@ app.put('/plants/:id', async (req, res) => {
 app.delete('/plants/:id', async (req, res) => {
   const { id } = req.params
   try {
-    // Sucess to delete the guest
+    // Success to delete the plant 
     await Plant.findOneAndDelete({ '_id': id })
     res.status(201).json()
   } catch (err) {
@@ -200,3 +226,12 @@ app.delete('/plants/:id', async (req, res) => {
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`)
 })
+
+app.use(function (err, req, res, next) {
+  // set locals, only providing error in development
+  res.locals.message = err.message;
+  res.locals.error = req.app.get('env') === 'development' ? err : {};
+  // render the error page
+  res.status(err.status || 500);
+  res.send(err);//this or res.status(err.status || 500).send('error')
+});

@@ -13,7 +13,7 @@ mongoose.Promise = Promise
 
 // **** MONGOOSE MODELS ****
 
-//Mongoose model for plant profile
+//Mongoose model for User
 
 export const User = mongoose.model('User', {
   name: {
@@ -88,7 +88,7 @@ const authenticateUser = async (req, res, next) => {
 }
 
 // **** PORT SETUP ****
-const port = process.env.PORT | 8090
+const port = process.env.PORT | 8000
 const app = express()
 
 // Add middlewares to enable cors and json body parsing
@@ -128,20 +128,72 @@ app.get('/secrets', (req, res) => {
 
 // Login
 
-app.post('/sessions', async (req, res) => {
-  const user = await User.findOne({ email: req.body.email });
-  if (user && bcrypt.compareSync(req.body.password, user.password)) {
-    res.json({
-      name: user.name,
-      userId: user._id,
-      accessToken: user.accessToken
-    });
-  } else {
-    res.json({
-      notFound: true
-    });
+app.post('/login', async (req, res) => {
+  try {
+    const { email, password } = req.body
+    const user = await User.findOne({ email })
+    if (user && bcrypt.compareSync(password, user.password)) {
+      res.status(201).json({ name: user.name, userId: user._id, accessToken: user.accessToken })
+    } else {
+      res.json({ notFound: true })
+    }
+  } catch (err) {
+    res.status(400).json({ message: 'Could not find user', errors: err.errors })
   }
-});
+})
+
+// **** PLANT PROFILE ROUTES ****
+
+// get route for specific plant id
+app.get('/plants/:id', async (req, res) => {
+  const plant = await Plant.findById(req.params.id)
+  if (plant) {
+    res.json(plant)
+  } else {
+    res.status(404).json({ error: 'Plant not found' })
+  }
+})
+
+// Post route for plant profiles
+app.post('/plants', async (req, res) => {
+  const { name, location, acquiredAt, type, notes, waterAt } = req.body
+  // using mongoose model to create the database entry
+  const plant = new Plant({ name, location, acquiredAt, type, notes, waterAt })
+  try {
+    //Success
+    const savedPlant = await plant.save()
+    res.status(201).json(savedPlant)
+  } catch (err) {
+    // Failed
+    res.status(400).json({ message: 'Could not create plant profile', error: err.errors })
+  }
+})
+
+// Put route for specific plant id
+app.put('/plants/:id', async (req, res) => {
+  const { id } = req.params
+  try {
+    //Success
+    await Plant.findOneAndUpdate({ '_id': id }, req.body, { new: true })
+    res.status(201).json()
+  } catch (err) {
+    // Failed
+    res.status(400).json({ message: 'Could not update plant profile', error: err.errors })
+  }
+})
+
+// Delete route for specific plant id
+app.delete('/plants/:id', async (req, res) => {
+  const { id } = req.params
+  try {
+    // Sucess to delete the guest
+    await Plant.findOneAndDelete({ '_id': id })
+    res.status(201).json()
+  } catch (err) {
+    // Failed
+    res.status(404).json({ message: 'Could not delete plant profile', error: err.errors })
+  }
+})
 
 
 // Start the server

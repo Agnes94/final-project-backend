@@ -108,7 +108,7 @@ const authenticateUser = async (req, res, next) => {
 }
 
 // **** PORT SETUP ****
-const port = process.env.PORT | 8000
+const port = process.env.PORT || 8000
 const app = express()
 
 
@@ -193,8 +193,6 @@ app.get('/plants/:id', async (req, res) => {
   }
 })
 
-
-
 // Put route for specific plant id
 app.put('/plants/:id', async (req, res) => {
   const { id } = req.params
@@ -226,6 +224,8 @@ app.delete('/plants/:id', async (req, res) => {
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`)
 })
+
+// Error handling
 
 app.use(function (err, req, res, next) {
   // set locals, only providing error in development

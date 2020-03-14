@@ -35,6 +35,7 @@ const app = express()
 // Add middlewares to enable cors and json body parsing
 app.use(cors())
 app.use(bodyParser.json())
+app.use(bodyParser.urlencoded())
 
 const authenticateUser = async (req, res, next) => {
   const user = await User.findOne({ accessToken: req.header('Authorization') })
@@ -146,9 +147,15 @@ app.post('/login', async (req, res) => {
   }
 })
 
+app.get('/plants/', async (req, res) => {
+  const plants = await Plant.find()
+  res.status(200).json(plants)
+})
+
 // Create plant
 app.post('/plants', parser.single('image'), async (req, res) => {
   try {
+    console.log(req.body)
     const { name, location, acquiredAt, type, notes, waterAt } = req.body
     const plant = new Plant({
       name,

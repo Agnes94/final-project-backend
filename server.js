@@ -181,47 +181,37 @@ app.get('/secrets', (req, res) => {
 
 // **** PLANT PROFILE ROUTES ****
 
-// get route for specific plant id
-// app.get('/plants/:id', async (req, res) => {
-//   const plant = await Plant.findById(req.params.id)
-//   if (plant) {
-//     res.json(plant)
-//   } else {
-//     res.status(404).json({ error: 'Plant not found' })
-//   }
-// })
+// Put route for specific plant id
 
-// // Put route for specific plant id
-// app.put('/plants/:id', async (req, res) => {
-//   const { id } = req.params
-//   try {
-//     //Success
-//     await Plant.findOneAndUpdate({ _id: id }, req.body, { new: true })
-//     res.status(201).json()
-//   } catch (err) {
-//     // Failed
-//     res
-//       .status(400)
-//       .json({ message: 'Could not update plant profile', error: err.errors })
-//   }
-// })
+app.put('/plants/:id', async (req, res) => {
+  const { id } = req.params
+  try {
+    await Plant.findOneAndUpdate({ '_id': id }, req.body, { new: true })
+    res.status(201).json(plant)
+  } catch (err) {
+    res.status(400).json({ message: 'Could not update plant profile', error: err.errors })
+  }
+})
 
-// // Delete route for specific plant id
-// app.delete('/plants/:id', async (req, res) => {
-//   const { id } = req.params
-//   try {
-//     // Success to delete the plant
-//     await Plant.findOneAndDelete({ _id: id })
-//     res.status(201).json()
-//   } catch (err) {
-//     // Failed
-//     res
-//       .status(404)
-//       .json({ message: 'Could not delete plant profile', error: err.errors })
-//   }
-// })
+
+//  Delete route for specific plant id
+
+app.delete('/plants/:id', async (req, res) => {
+  console.log(req.params)
+  const { id } = req.params
+  try {
+    // Success to delete the plant
+    await Plant.findOneAndDelete({ '_id': id })
+    res.status(204).json()
+  } catch (err) {
+    // Failed
+    res.status(404)
+      .json({ message: 'Could not delete plant profile', error: err.errors })
+  }
+})
 
 // Start the server
+
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`)
 })

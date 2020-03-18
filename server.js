@@ -153,9 +153,32 @@ app.get('/plants/', async (req, res) => {
 })
 
 // Create plant
+
 app.post('/plants', parser.single('image'), async (req, res) => {
   try {
-    console.log(req.body)
+    const { name, location, acquiredAt, type, notes, waterAt } = req.body;
+    const image = req.file.url;
+    const plant = new Plant({
+      name,
+      location,
+      acquiredAt,
+      type,
+      notes,
+      image,
+      waterAt,
+    })
+    const savedPlant = await plant.save()
+    res.status(201).json(savedPlant)
+  } catch (err) {
+    res
+      .status(400)
+      .json({ message: 'Could not create plant', errors: err.errors })
+  }
+})
+
+/* app.post('/plants', parser.single('image'), async (req, res) => {
+  try {
+    console.log(req)
     const { name, location, acquiredAt, type, notes, waterAt } = req.body
     const plant = new Plant({
       name,
@@ -172,7 +195,7 @@ app.post('/plants', parser.single('image'), async (req, res) => {
       .status(400)
       .json({ message: 'Could not create plant', errors: err.errors })
   }
-})
+}) */
 
 app.get('/secrets', authenticateUser)
 app.get('/secrets', (req, res) => {

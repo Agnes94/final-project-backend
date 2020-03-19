@@ -107,7 +107,7 @@ const Plant = mongoose.model('Plant', {
 // Start defining your routes here
 app.get('/', (req, res) => {
   res.send('Final Project - Backend by Agnes Ketesdi @Technigo 2020')
-})
+});
 
 // Create user
 app.post('/users', async (req, res) => {
@@ -116,8 +116,7 @@ app.post('/users', async (req, res) => {
     const user = new User({
       name,
       email,
-      password: bcrypt.hashSync(password),
-      lists
+      password: bcrypt.hashSync(password)
     })
     const saved = await user.save()
     res.status(201).json(saved)
@@ -126,7 +125,7 @@ app.post('/users', async (req, res) => {
       .status(400)
       .json({ message: 'Could not create user', errors: err.errors })
   }
-})
+});
 
 // Login user
 app.post('/login', async (req, res) => {
@@ -145,7 +144,7 @@ app.post('/login', async (req, res) => {
   } catch (err) {
     res.status(400).json({ message: 'Could not find user', errors: err.errors })
   }
-})
+});
 
 app.get('/plants/', async (req, res) => {
   const plants = await Plant.find()
@@ -174,33 +173,12 @@ app.post('/plants', parser.single('image'), async (req, res) => {
       .status(400)
       .json({ message: 'Could not create plant', errors: err.errors })
   }
-})
-
-/* app.post('/plants', parser.single('image'), async (req, res) => {
-  try {
-    console.log(req)
-    const { name, location, acquiredAt, type, notes, waterAt } = req.body
-    const plant = new Plant({
-      name,
-      location,
-      acquiredAt,
-      type,
-      notes,
-      waterAt
-    })
-    const savedPlant = await plant.save()
-    res.status(201).json(savedPlant)
-  } catch (err) {
-    res
-      .status(400)
-      .json({ message: 'Could not create plant', errors: err.errors })
-  }
-}) */
+});
 
 app.get('/secrets', authenticateUser)
 app.get('/secrets', (req, res) => {
   res.json({ secret: 'This is a top secret message!' })
-})
+});
 
 // **** PLANT PROFILE ROUTES ****
 
@@ -214,7 +192,7 @@ app.put('/plants/:id', async (req, res) => {
   } catch (err) {
     res.status(400).json({ message: 'Could not update plant profile', error: err.errors })
   }
-})
+});
 
 
 //  Delete route for specific plant id
@@ -231,7 +209,7 @@ app.delete('/plants/:id', async (req, res) => {
     res.status(404)
       .json({ message: 'Could not delete plant profile', error: err.errors })
   }
-})
+});
 
 // Start the server
 
